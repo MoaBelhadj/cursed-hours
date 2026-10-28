@@ -1,0 +1,211 @@
+<title>Cursed Hours</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Chakra+Petch:wght@400;600&family=Shippori+Mincho+B1:wght@800&display=swap">
+<style>
+/* Layout: one centered ritual circle on an ink-black field; grade ladder and settings sit quietly beneath. */
+:root {
+  --ink: #07060d;
+  --panel: #100e1c;
+  --line: #2a2545;
+  --text: #e8e6f5;
+  --dim: #8d88ad;
+  --focus: #6c7bff;   /* cursed energy, focus */
+  --rest: #35e0b0;    /* reversed technique, rest */
+  --domain: #ff3b5c;  /* domain expansion, long rest */
+  --accent: var(--focus);
+  --f-display: "Anton", "Impact", sans-serif;
+  --f-body: "Chakra Petch", system-ui, sans-serif;
+  --f-kanji: "Shippori Mincho B1", "Yu Mincho", serif;
+  color-scheme: dark;
+}
+body[data-mode="short"] { --accent: var(--rest); }
+body[data-mode="long"] { --accent: var(--domain); }
+* { box-sizing: border-box; }
+body {
+  background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--accent) 16%, var(--ink)), var(--ink) 65%) fixed, var(--ink);
+  color: var(--text);
+  font: 400 15px/1.5 var(--f-body);
+  padding-block: 28px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  min-height: 100%;
+  transition: background .6s;
+}
+main { max-width: 460px; margin: 0 auto; display: grid; gap: 28px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+h1 { font: 400 28px/1 var(--f-display); letter-spacing: .06em; text-transform: uppercase; margin: 0; }
+h1 span { font-family: var(--f-kanji); font-weight: 800; color: var(--accent); margin-right: 8px; font-size: 30px; }
+.count { color: var(--dim); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mode { background: transparent; border: 1px solid var(--line); padding: 10px 6px; letter-spacing: .06em; font-size: 12px; text-transform: uppercase; transition: border-color .2s, color .2s; }
+.mode[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+.dial { position: relative; width: min(100%, 360px); aspect-ratio: 1; margin: 0 auto; }
+.dial svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.track { fill: none; stroke: var(--line); stroke-width: 6; }
+.arc { fill: none; stroke: var(--accent); stroke-width: 6; stroke-linecap: butt; transition: stroke .6s; filter: drop-shadow(0 0 8px var(--accent)); }
+.running .arc { animation: pulse 2.4s ease-in-out infinite; }
+@keyframes pulse { 50% { filter: drop-shadow(0 0 18px var(--accent)); } }
+.face { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 4px; }
+.time { font: 400 clamp(64px, 22vw, 96px)/1 var(--f-display); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.label { color: var(--accent); font-size: 12px; letter-spacing: .22em; text-transform: uppercase; }
+.sub { color: var(--dim); font-size: 12px; max-width: 24ch; margin: 0 auto; }
+.controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.go { background: var(--accent); color: var(--ink); border: 0; padding: 14px 40px; font: 400 20px/1 var(--f-display); letter-spacing: .12em; text-transform: uppercase; clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); min-width: 180px; }
+.ghost { background: transparent; border: 1px solid var(--line); padding: 12px 18px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
+.ghost:hover, .mode:hover { border-color: var(--accent); }
+section { background: var(--panel); border: 1px solid var(--line); padding: 16px; display: grid; gap: 12px; }
+h2 { font: 400 14px/1 var(--f-body); font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); margin: 0; }
+.grade { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.grade strong { font: 400 26px/1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; }
+.bar { height: 4px; background: var(--line); }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .5s; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+label { display: grid; gap: 4px; font-size: 12px; color: var(--dim); letter-spacing: .06em; text-transform: uppercase; }
+input { background: var(--ink); color: var(--text); border: 1px solid var(--line); padding: 8px; font: inherit; width: 100%; min-width: 0; }
+@media (prefers-reduced-motion: reduce) { .running .arc { animation: none; } * { transition: none !important; } }
+</style>
+
+<main>
+  <header>
+    <h1><span>呪</span>Cursed Hours</h1>
+    <div class="count" id="count">0 sessions today</div>
+  </header>
+
+  <div class="modes" role="group" aria-label="Session type">
+    <button class="mode" data-mode="focus" aria-pressed="true">Focus</button>
+    <button class="mode" data-mode="short" aria-pressed="false">Rest</button>
+    <button class="mode" data-mode="long" aria-pressed="false">Domain</button>
+  </div>
+
+  <div class="dial" id="dial">
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+      <circle class="track" cx="100" cy="100" r="92"/>
+      <circle class="arc" id="arc" cx="100" cy="100" r="92" stroke-dasharray="578.05" stroke-dashoffset="0"/>
+    </svg>
+    <div class="face" role="timer" aria-live="off">
+      <div class="label" id="label">Channel cursed energy</div>
+      <div class="time" id="time">25:00</div>
+      <p class="sub" id="sub">Hold one technique until the timer ends.</p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="go" id="go">Begin</button>
+    <button class="ghost" id="reset">Reset</button>
+    <button class="ghost" id="skip">Skip</button>
+  </div>
+
+  <section>
+    <h2>Sorcerer grade</h2>
+    <div class="grade"><strong id="grade">Grade 4</strong><span class="count" id="next">2 sessions to Grade 3</span></div>
+    <div class="bar"><i id="gbar"></i></div>
+  </section>
+
+  <section>
+    <h2>Durations (minutes)</h2>
+    <div class="fields">
+      <label for="d-focus">Focus<input id="d-focus" type="number" min="1" max="120" value="25"></label>
+      <label for="d-short">Rest<input id="d-short" type="number" min="1" max="60" value="5"></label>
+      <label for="d-long">Domain<input id="d-long" type="number" min="1" max="90" value="15"></label>
+    </div>
+    <label for="mute" style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px"><input id="mute" type="checkbox" style="width:auto"> Silence the bell</label>
+  </section>
+</main>
+
+<script>
+const MODES = {
+  focus: { label: "Channel cursed energy", sub: "Hold one technique until the timer ends." },
+  short: { label: "Reverse technique", sub: "Heal. Water, stretch, look away from the screen." },
+  long:  { label: "Domain expansion", sub: "A full reset. Step away before the next cycle." },
+};
+const GRADES = [[0,"Grade 4"],[2,"Grade 3"],[4,"Grade 2"],[8,"Semi-Grade 1"],[12,"Grade 1"],[20,"Special Grade"]];
+const $ = id => document.getElementById(id);
+const C = 2 * Math.PI * 92;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const today = () => new Date().toDateString();
+let st = store.get("jjk", null);
+if (!st || st.day !== today()) st = { day: today(), done: 0, cycle: 0, total: (st && st.total) || 0 };
+let cfg = store.get("jjk-cfg", { focus: 25, short: 5, long: 15, mute: false });
+let mode = "focus", left = cfg.focus * 60, endAt = 0, timer = null;
+
+const fmt = s => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+const total = () => cfg[mode] * 60;
+
+function bell() {
+  if (cfg.mute) return;
+  try {
+    const a = new (window.AudioContext || window.webkitAudioContext)();
+    [0, .35, .7].forEach((t, i) => {
+      const o = a.createOscillator(), g = a.createGain();
+      o.frequency.value = [523, 659, 784][i]; o.type = "triangle";
+      g.gain.setValueAtTime(.0001, a.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(.25, a.currentTime + t + .03);
+      g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + t + .6);
+      o.connect(g); g.connect(a.destination); o.start(a.currentTime + t); o.stop(a.currentTime + t + .65);
+    });
+  } catch {}
+}
+
+function render() {
+  document.body.dataset.mode = mode;
+  document.body.classList.toggle("running", !!timer);
+  $("time").textContent = fmt(left);
+  $("arc").style.strokeDashoffset = C * (1 - left / total());
+  $("label").textContent = MODES[mode].label;
+  $("sub").textContent = MODES[mode].sub;
+  $("go").textContent = timer ? "Pause" : left < total() ? "Resume" : "Begin";
+  document.title = (timer ? fmt(left) + " · " : "") + "Cursed Hours";
+  document.querySelectorAll(".mode").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode));
+  $("count").textContent = st.done + (st.done === 1 ? " session today" : " sessions today");
+  let gi = 0; GRADES.forEach(([n], i) => { if (st.total >= n) gi = i; });
+  const nxt = GRADES[gi + 1];
+  $("grade").textContent = GRADES[gi][1];
+  $("next").textContent = nxt ? (nxt[0] - st.total) + " more to " + nxt[1] : "Nothing left to prove";
+  $("gbar").style.width = nxt ? (100 * (st.total - GRADES[gi][0]) / (nxt[0] - GRADES[gi][0])) + "%" : "100%";
+}
+
+function stop() { clearInterval(timer); timer = null; }
+function setMode(m) { stop(); mode = m; left = total(); render(); }
+
+function finish() {
+  stop(); bell();
+  if (mode === "focus") {
+    st.done++; st.total++; st.cycle++; store.set("jjk", st);
+    setMode(st.cycle % 4 === 0 ? "long" : "short");
+  } else setMode("focus");
+}
+
+function tick() {
+  left = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+  render();
+  if (left === 0) finish();
+}
+
+$("go").onclick = () => {
+  if (timer) { stop(); render(); return; }
+  endAt = Date.now() + left * 1000;
+  timer = setInterval(tick, 250); render();
+};
+$("reset").onclick = () => { stop(); left = total(); render(); };
+$("skip").onclick = () => setMode(mode === "focus" ? "short" : "focus");
+document.querySelectorAll(".mode").forEach(b => b.onclick = () => setMode(b.dataset.mode));
+["focus", "short", "long"].forEach(k => {
+  $("d-" + k).value = cfg[k];
+  $("d-" + k).onchange = e => {
+    const v = Math.max(1, Math.min(+e.target.max, Math.round(+e.target.value) || cfg[k]));
+    cfg[k] = v; e.target.value = v; store.set("jjk-cfg", cfg);
+    if (k === mode && !timer) { left = total(); render(); }
+  };
+});
+$("mute").checked = cfg.mute;
+$("mute").onchange = e => { cfg.mute = e.target.checked; store.set("jjk-cfg", cfg); };
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && !/INPUT|BUTTON/.test(e.target.tagName)) { e.preventDefault(); $("go").click(); }
+});
+render();
+</script>
