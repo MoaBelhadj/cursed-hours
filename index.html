@@ -199,7 +199,11 @@ document.querySelectorAll(".mode").forEach(b => b.onclick = () => setMode(b.data
   $("d-" + k).onchange = e => {
     const v = Math.max(1, Math.min(+e.target.max, Math.round(+e.target.value) || cfg[k]));
     cfg[k] = v; e.target.value = v; store.set("jjk-cfg", cfg);
-    if (k === mode && !timer) { left = total(); render(); }
+    if (k !== mode) return;
+    if (!timer) left = total();
+    // Shortened while running: cap the remaining time so the arc and label stay valid.
+    else if (left > total()) { left = total(); endAt = Date.now() + left * 1000; }
+    render();
   };
 });
 $("mute").checked = cfg.mute;
