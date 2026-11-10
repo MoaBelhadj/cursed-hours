@@ -175,6 +175,8 @@ function setMode(m) { stop(); mode = m; left = total(); render(); }
 function finish() {
   stop(); bell();
   if (mode === "focus") {
+    // Tab left open past midnight: start a fresh day before counting.
+    if (st.day !== today()) st = { day: today(), done: 0, cycle: 0, total: st.total };
     st.done++; st.total++; st.cycle++; store.set("jjk", st);
     setMode(st.cycle % 4 === 0 ? "long" : "short");
   } else setMode("focus");
