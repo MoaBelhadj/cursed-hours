@@ -148,6 +148,8 @@ function bell() {
       g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + t + .6);
       o.connect(g); g.connect(a.destination); o.start(a.currentTime + t); o.stop(a.currentTime + t + .65);
     });
+    // Release the context once the chime ends; browsers cap how many can be open at once.
+    setTimeout(() => a.close().catch(() => {}), 1500);
   } catch {}
 }
 
