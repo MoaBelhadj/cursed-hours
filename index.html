@@ -103,7 +103,7 @@ input { background: var(--ink); color: var(--text); border: 1px solid var(--line
   <section>
     <h2>Sorcerer grade</h2>
     <div class="grade"><strong id="grade">Grade 4</strong><span class="count" id="next">2 sessions to Grade 3</span></div>
-    <div class="bar"><i id="gbar"></i></div>
+    <div class="bar" id="gprog" role="progressbar" aria-label="Progress to next grade" aria-valuemin="0" aria-valuemax="100"><i id="gbar"></i></div>
   </section>
 
   <section>
@@ -171,7 +171,10 @@ function render() {
   const nxt = GRADES[gi + 1];
   $("grade").textContent = GRADES[gi][1];
   $("next").textContent = nxt ? (nxt[0] - st.total) + " more to " + nxt[1] : "Nothing left to prove";
-  $("gbar").style.width = nxt ? (100 * (st.total - GRADES[gi][0]) / (nxt[0] - GRADES[gi][0])) + "%" : "100%";
+  const pct = nxt ? 100 * (st.total - GRADES[gi][0]) / (nxt[0] - GRADES[gi][0]) : 100;
+  $("gbar").style.width = pct + "%";
+  $("gprog").setAttribute("aria-valuenow", Math.round(pct));
+  $("gprog").setAttribute("aria-valuetext", $("next").textContent);
 }
 
 function stop() { clearInterval(timer); timer = null; }
