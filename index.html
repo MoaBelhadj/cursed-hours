@@ -135,6 +135,8 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 const today = () => new Date().toDateString();
+// Tab left open past midnight: start a fresh day, keeping lifetime progress.
+const rollover = () => { if (st.day !== today()) st = { day: today(), done: 0, cycle: 0, total: st.total }; };
 let st = store.get("jjk", null);
 if (!st || st.day !== today()) st = { day: today(), done: 0, cycle: 0, total: (st && st.total) || 0 };
 let cfg = store.get("jjk-cfg", { focus: 25, short: 5, long: 15, mute: false });
@@ -161,6 +163,7 @@ function bell() {
 }
 
 function render() {
+  rollover();
   document.body.dataset.mode = mode;
   document.body.classList.toggle("running", !!timer);
   $("time").textContent = fmt(left);
@@ -188,8 +191,7 @@ function finish() {
   stop(); bell();
   const ended = mode === "focus" ? "Focus" : "Break";
   if (mode === "focus") {
-    // Tab left open past midnight: start a fresh day before counting.
-    if (st.day !== today()) st = { day: today(), done: 0, cycle: 0, total: st.total };
+    rollover();
     st.done++; st.total++; st.cycle++; store.set("jjk", st);
     setMode(st.cycle % 4 === 0 ? "long" : "short");
   } else setMode("focus");
@@ -229,5 +231,7 @@ document.addEventListener("keydown", e => {
   // Ignore key auto-repeat so holding Space does not flicker between Begin and Pause.
   if (e.code === "Space" && !e.repeat && !/INPUT|BUTTON/.test(e.target.tagName)) { e.preventDefault(); $("go").click(); }
 });
+// Refresh the daily count when returning to a tab that sat idle overnight.
+document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
 render();
 </script>
