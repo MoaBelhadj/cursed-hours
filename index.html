@@ -228,8 +228,10 @@ document.querySelectorAll(".mode").forEach(b => b.onclick = () => setMode(b.data
 $("mute").checked = cfg.mute;
 $("mute").onchange = e => { cfg.mute = e.target.checked; store.set("jjk-cfg", cfg); };
 document.addEventListener("keydown", e => {
-  // Ignore key auto-repeat so holding Space does not flicker between Begin and Pause.
-  if (e.code === "Space" && !e.repeat && !/INPUT|BUTTON/.test(e.target.tagName)) { e.preventDefault(); $("go").click(); }
+  // Ignore key auto-repeat so holding Space does not flicker between Begin and Pause,
+  // and leave modified Space (Ctrl/Alt/Meta/Shift+Space) to the browser and OS.
+  const mod = e.ctrlKey || e.altKey || e.metaKey || e.shiftKey;
+  if (e.code === "Space" && !e.repeat && !mod && !/INPUT|BUTTON/.test(e.target.tagName)) { e.preventDefault(); $("go").click(); }
 });
 // Refresh the daily count when returning to a tab that sat idle overnight.
 document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
