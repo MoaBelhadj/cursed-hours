@@ -212,7 +212,8 @@ $("go").onclick = () => {
 };
 $("reset").onclick = () => { stop(); left = total(); render(); };
 $("skip").onclick = () => setMode(mode === "focus" ? "short" : "focus");
-document.querySelectorAll(".mode").forEach(b => b.onclick = () => setMode(b.dataset.mode));
+// Re-selecting the current mode is a no-op; only Reset discards the session in progress.
+document.querySelectorAll(".mode").forEach(b => b.onclick = () => { if (b.dataset.mode !== mode) setMode(b.dataset.mode); });
 ["focus", "short", "long"].forEach(k => {
   $("d-" + k).value = cfg[k];
   $("d-" + k).onchange = e => {
