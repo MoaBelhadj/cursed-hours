@@ -191,7 +191,8 @@ function finish() {
   stop(); bell();
   const ended = mode === "focus" ? "Focus" : "Break";
   if (mode === "focus") {
-    rollover();
+    // Re-read first so a session finished in another open tab is not overwritten.
+    st = store.get("jjk", st); rollover();
     st.done++; st.total++; st.cycle++; store.set("jjk", st);
     setMode(st.cycle % 4 === 0 ? "long" : "short");
   } else setMode("focus");
@@ -236,5 +237,7 @@ document.addEventListener("keydown", e => {
 });
 // Refresh the daily count when returning to a tab that sat idle overnight.
 document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
+// Keep the count and grade in step with sessions finished in other tabs.
+window.addEventListener("storage", e => { if (e.key === "jjk") { st = store.get("jjk", st); render(); } });
 render();
 </script>
