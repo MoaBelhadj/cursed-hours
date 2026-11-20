@@ -140,7 +140,7 @@ const rollover = () => { if (st.day !== today()) st = { day: today(), done: 0, c
 let st = store.get("jjk", null);
 if (!st || st.day !== today()) st = { day: today(), done: 0, cycle: 0, total: (st && st.total) || 0 };
 let cfg = store.get("jjk-cfg", { focus: 25, short: 5, long: 15, mute: false });
-let mode = "focus", left = cfg.focus * 60, endAt = 0, timer = null;
+let mode = "focus", left = cfg.focus * 60, endAt = 0, timer = null, alarm = null;
 
 const fmt = s => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
 const total = () => cfg[mode] * 60;
@@ -184,7 +184,10 @@ function render() {
   $("gprog").setAttribute("aria-valuetext", $("next").textContent);
 }
 
-function stop() { clearInterval(timer); timer = null; }
+function stop() { clearInterval(timer); clearTimeout(alarm); timer = null; }
+// Background tabs throttle repeating timers (Chrome to once a minute), so the 250ms tick
+// alone can end a session late. A one-shot timeout at endAt keeps the finish on time.
+function arm() { clearTimeout(alarm); alarm = setTimeout(tick, endAt - Date.now()); }
 function setMode(m) { stop(); mode = m; left = total(); render(); }
 
 function finish() {
@@ -209,7 +212,7 @@ function tick() {
 $("go").onclick = () => {
   if (timer) { stop(); render(); return; }
   endAt = Date.now() + left * 1000;
-  timer = setInterval(tick, 250); render();
+  timer = setInterval(tick, 250); arm(); render();
 };
 $("reset").onclick = () => { stop(); left = total(); render(); };
 $("skip").onclick = () => setMode(mode === "focus" ? "short" : "focus");
@@ -223,7 +226,7 @@ document.querySelectorAll(".mode").forEach(b => b.onclick = () => { if (b.datase
     if (k !== mode) return;
     if (!timer) left = total();
     // Shortened while running: cap the remaining time so the arc and label stay valid.
-    else if (left > total()) { left = total(); endAt = Date.now() + left * 1000; }
+    else if (left > total()) { left = total(); endAt = Date.now() + left * 1000; arm(); }
     render();
   };
 });
