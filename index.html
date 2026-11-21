@@ -218,16 +218,18 @@ $("reset").onclick = () => { stop(); left = total(); render(); };
 $("skip").onclick = () => setMode(mode === "focus" ? "short" : "focus");
 // Re-selecting the current mode is a no-op; only Reset discards the session in progress.
 document.querySelectorAll(".mode").forEach(b => b.onclick = () => { if (b.dataset.mode !== mode) setMode(b.dataset.mode); });
+function setDuration(k, v) {
+  cfg[k] = v; $("d-" + k).value = v;
+  if (k !== mode) return;
+  if (!timer) left = total();
+  // Shortened while running: cap the remaining time so the arc and label stay valid.
+  else if (left > total()) { left = total(); endAt = Date.now() + left * 1000; arm(); }
+}
 ["focus", "short", "long"].forEach(k => {
   $("d-" + k).value = cfg[k];
   $("d-" + k).onchange = e => {
-    const v = Math.max(1, Math.min(+e.target.max, Math.round(+e.target.value) || cfg[k]));
-    cfg[k] = v; e.target.value = v; store.set("jjk-cfg", cfg);
-    if (k !== mode) return;
-    if (!timer) left = total();
-    // Shortened while running: cap the remaining time so the arc and label stay valid.
-    else if (left > total()) { left = total(); endAt = Date.now() + left * 1000; arm(); }
-    render();
+    setDuration(k, Math.max(1, Math.min(+e.target.max, Math.round(+e.target.value) || cfg[k])));
+    store.set("jjk-cfg", cfg); render();
   };
 });
 $("mute").checked = cfg.mute;
@@ -241,6 +243,14 @@ document.addEventListener("keydown", e => {
 // Refresh the daily count when returning to a tab that sat idle overnight.
 document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
 // Keep the count and grade in step with sessions finished in other tabs.
-window.addEventListener("storage", e => { if (e.key === "jjk") { st = store.get("jjk", st); render(); } });
+window.addEventListener("storage", e => {
+  if (e.key === "jjk") { st = store.get("jjk", st); render(); }
+  // Settings changed in another tab: adopt them so this tab's saves do not revert them.
+  if (e.key === "jjk-cfg") {
+    const n = store.get("jjk-cfg", cfg);
+    ["focus", "short", "long"].forEach(k => { if (n[k] !== cfg[k]) setDuration(k, n[k]); });
+    cfg.mute = $("mute").checked = !!n.mute; render();
+  }
+});
 render();
 </script>
