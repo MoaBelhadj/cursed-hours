@@ -219,11 +219,13 @@ $("skip").onclick = () => setMode(mode === "focus" ? "short" : "focus");
 // Re-selecting the current mode is a no-op; only Reset discards the session in progress.
 document.querySelectorAll(".mode").forEach(b => b.onclick = () => { if (b.dataset.mode !== mode) setMode(b.dataset.mode); });
 function setDuration(k, v) {
+  const idle = !timer && left === total();
   cfg[k] = v; $("d-" + k).value = v;
   if (k !== mode) return;
-  if (!timer) left = total();
-  // Shortened while running: cap the remaining time so the arc and label stay valid.
-  else if (left > total()) { left = total(); endAt = Date.now() + left * 1000; arm(); }
+  if (idle) left = total();
+  // Shortened mid-session (running or paused): keep progress but cap the remaining
+  // time so the arc and label stay valid.
+  else if (left > total()) { left = total(); if (timer) { endAt = Date.now() + left * 1000; arm(); } }
 }
 ["focus", "short", "long"].forEach(k => {
   $("d-" + k).value = cfg[k];
