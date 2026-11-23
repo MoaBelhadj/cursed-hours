@@ -187,7 +187,8 @@ function render() {
 function stop() { clearInterval(timer); clearTimeout(alarm); timer = null; }
 // Background tabs throttle repeating timers (Chrome to once a minute), so the 250ms tick
 // alone can end a session late. A one-shot timeout at endAt keeps the finish on time.
-function arm() { clearTimeout(alarm); alarm = setTimeout(tick, endAt - Date.now()); }
+// Re-arm if the timeout fires a few ms before endAt, so the finish is never left to the throttled tick.
+function arm() { clearTimeout(alarm); alarm = setTimeout(() => { tick(); if (timer) arm(); }, endAt - Date.now()); }
 function setMode(m) { stop(); mode = m; left = total(); render(); }
 
 function finish() {
@@ -204,7 +205,8 @@ function finish() {
 }
 
 function tick() {
-  left = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+  // Round up like a countdown clock: rounding to nearest showed 00:00 and ended the session ~0.5s early.
+  left = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
   render();
   if (left === 0) finish();
 }
