@@ -171,7 +171,8 @@ function render() {
   $("label").textContent = MODES[mode].label;
   $("sub").textContent = MODES[mode].sub;
   $("go").textContent = timer ? "Pause" : left < total() ? "Resume" : "Begin";
-  document.title = (timer ? fmt(left) + " · " : "") + "Cursed Hours";
+  // Keep a paused session visible in the tab strip, not only a running one.
+  document.title = (timer ? fmt(left) + " · " : left < total() ? "Paused " + fmt(left) + " · " : "") + "Cursed Hours";
   document.querySelectorAll(".mode").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode));
   $("count").textContent = st.done + (st.done === 1 ? " session today" : " sessions today");
   let gi = 0; GRADES.forEach(([n], i) => { if (st.total >= n) gi = i; });
