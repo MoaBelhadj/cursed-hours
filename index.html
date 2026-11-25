@@ -233,7 +233,10 @@ function setDuration(k, v) {
 ["focus", "short", "long"].forEach(k => {
   $("d-" + k).value = cfg[k];
   $("d-" + k).onchange = e => {
-    setDuration(k, Math.max(1, Math.min(+e.target.max, Math.round(+e.target.value) || cfg[k])));
+    // An emptied or unreadable field keeps the old value; anything else (0 included) is
+    // clamped into range, so 0 becomes 1 minute just as -5 does, instead of being ignored.
+    const v = e.target.value === "" ? cfg[k] : Math.round(+e.target.value);
+    setDuration(k, Math.max(1, Math.min(+e.target.max, v)));
     store.set("jjk-cfg", cfg); render();
   };
 });
