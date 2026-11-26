@@ -201,8 +201,11 @@ function finish() {
     st.done++; st.total++; st.cycle++; store.set("jjk", st);
     setMode(st.cycle % 4 === 0 ? "long" : "short");
   } else setMode("focus");
-  // The timer itself is silent to screen readers; announce the hand-off once.
-  $("say").textContent = ended + " session complete. " + MODES[mode].label + " is ready.";
+  // The timer itself is silent to screen readers; announce the hand-off once. Clear the
+  // region first: setting the same text again (e.g. after skipping a break) is not re-read.
+  const msg = ended + " session complete. " + MODES[mode].label + " is ready.";
+  $("say").textContent = "";
+  setTimeout(() => { $("say").textContent = msg; }, 100);
 }
 
 function tick() {
