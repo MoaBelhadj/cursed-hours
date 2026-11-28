@@ -57,6 +57,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .sub { color: var(--dim); font-size: 12px; max-width: 24ch; margin: 0 auto; }
 .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .go { background: var(--accent); color: var(--ink); border: 0; padding: 14px 40px; font: 400 20px/1 var(--f-display); letter-spacing: .12em; text-transform: uppercase; clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); min-width: 180px; }
+/* clip-path cuts off any outline drawn outside the slanted button, so draw it inside. */
+.go:focus-visible { outline: 2px solid var(--ink); outline-offset: -11px; }
 .ghost { background: transparent; border: 1px solid var(--line); padding: 12px 18px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
 .ghost:hover, .mode:hover { border-color: var(--accent); }
 section { background: var(--panel); border: 1px solid var(--line); padding: 16px; display: grid; gap: 12px; }
